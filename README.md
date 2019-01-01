@@ -14,8 +14,14 @@ In case the process works, you should get a message on the fakedos startup telli
 
 ## Development
 --------------
-In order to compile the project, add the .dll files from "Dusk\\Dusk_Data\\Managed" into the "Assemblies\\" folder.
-Add the "DuskMod.dll" assembly into your mod and any necessary UnityScript references, check the included mods and *Harmony's* documentation for a QuickStart.
+If Steam is not installed in the default location on your main drive, and/or Dusk is installed in a separate Steam library folder, set the `DuskDir` environment variable to your Dusk game directory.
+
+You may alternatively set the path when building via the `dotnet` CLI:  
+`dotnet build -p:DuskDir="path/to/game/directory" -c Release`
+
+Add the "DuskMod.dll" assembly into your mod and any necessary assembly references from the game's Managed directory.
+
+Check the included mods and *Harmony's* documentation for a QuickStart.
 
 ## License
 ----------

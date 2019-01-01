@@ -1,0 +1,6 @@
+<Project>
+    <PropertyGroup>
+        <!-- Default Dusk installation directory -->
+        <DuskDir>$(MSBuildProgramFiles32)\Steam\steamapps\common\Dusk</DuskDir>
+    </PropertyGroup>
+</Project>

@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Harmony;
 using System.Reflection;
+using Harmony;
 using UnityEngine;
 
 [ModEntryPoint]
@@ -21,7 +18,7 @@ public static class Stickies
     {
         static bool Prefix(DestructibleObjectScript __instance)
         {
-            if (__instance.tag == "EnemyTag")
+            if (__instance.CompareTag("EnemyTag"))
             {
                 for (int i = 0; i < __instance.transform.childCount; i++)
                 {
@@ -40,22 +37,22 @@ public static class Stickies
    
     [HarmonyPatch(typeof(BuzzSawHitScript))]
     [HarmonyPatch("OnCollisionEnter")]
-    [HarmonyPatch(new Type[] { typeof(Collision) })]
+    [HarmonyPatch(new[] { typeof(Collision) })]
     class BuzzSawHitScript_OnCollisionEnter_Patch
     {
         static bool Prefix(BuzzSawHitScript __instance, Collision hit)
         {
-            if (hit.transform.gameObject.tag == "EnemyTag")
+            if (hit.transform.gameObject.CompareTag("EnemyTag"))
             {
                 __instance.transform.parent = hit.transform.gameObject.transform;
-                __instance.GetComponent<Rigidbody>().velocity = new Vector3();
+                __instance.GetComponent<Rigidbody>().velocity = Vector3.zero;
                 __instance.GetComponent<Rigidbody>().useGravity = false;
                 __instance.GetComponent<Rigidbody>().detectCollisions = false;
                 return false;
             }
             else if ((DestructibleObjectScript)hit.transform.gameObject.GetComponent(typeof(DestructibleObjectScript)) == null)
             {
-                __instance.GetComponent<Rigidbody>().velocity = new Vector3();
+                __instance.GetComponent<Rigidbody>().velocity = Vector3.zero;
                 __instance.GetComponent<Rigidbody>().useGravity = false;
                 __instance.GetComponent<Rigidbody>().detectCollisions = false;
                 return false;
