@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
@@ -15,8 +16,8 @@ namespace DuskMod
             var log = new System.IO.StreamWriter("DuskModPatcher.log", false);
             log.AutoFlush = true;
 
-            string curdir           = Directory.GetCurrentDirectory();
-            string duskdir          = Path.GetFullPath(Path.Combine(curdir, ".."));
+            string curdir           = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            string duskdir          = Directory.GetParent(curdir).FullName;
             string patchedAsm       = new[] { duskdir, "Dusk_Data", "Managed", "Assembly-CSharp.dll" }.Aggregate(Path.Combine);
             string patchedAsmBackup = Path.Combine(curdir, "Assembly-CSharp.dll.bak");
             string patchAsm         = Path.Combine(duskdir, "DuskMod.dll");
