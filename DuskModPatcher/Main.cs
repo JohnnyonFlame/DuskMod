@@ -10,17 +10,6 @@ namespace DuskMod
 {
     class Program
     {
-        static string multiCombine(string first, string[] rest)
-        {
-            string ret = first;
-            foreach (var next in rest)
-            {
-                ret = Path.Combine(ret, next);
-            }
-
-            return ret;
-        }
-
         static void Main(string[] args)
         {
             var log = new System.IO.StreamWriter("DuskModPatcher.log", false);
@@ -28,7 +17,7 @@ namespace DuskMod
 
             string curdir           = Directory.GetCurrentDirectory();
             string duskdir          = Path.GetFullPath(Path.Combine(curdir, ".."));
-            string patchedAsm       = multiCombine(duskdir, new string[] { "Dusk_Data", "Managed", "Assembly-CSharp.dll" });
+            string patchedAsm       = new[] { duskdir, "Dusk_Data", "Managed", "Assembly-CSharp.dll" }.Aggregate(Path.Combine);
             string patchedAsmBackup = Path.Combine(curdir, "Assembly-CSharp.dll.bak");
             string patchAsm         = Path.Combine(duskdir, "DuskMod.dll");
 
