@@ -1,34 +1,30 @@
 ﻿using System;
 using System.IO;
-using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+
 using UnityEngine;
 using UnityEngine.UI;
-using System.Text;
-using Harmony;
 
 public static class DuskMod
 {
     public static void Init(Text text)
     {
-        string curdir = Directory.GetCurrentDirectory();
-        string moddir = Path.Combine(curdir, "mods");
-        text.text += "\nLoading mods...\n";
+        string rootDir = Directory.GetParent(Application.dataPath).FullName;
+        string modsDir = Path.Combine(rootDir, "Mods");
+        text.text     += "\nLoading mods...\n";
         
         try
         {
-            var assemblies = Directory.GetFiles(moddir).Where(x => Path.GetExtension(x).ToLower() == ".dll");
-
-            foreach (string file in assemblies)
+            foreach (string filePath in Directory.EnumerateFiles(modsDir, "*.dll"))
             {
-                text.text += string.Format("Loading mod {0}...\n", Path.GetFileNameWithoutExtension(file));
-                var asm = Assembly.LoadFrom(file);
-                var types = asm.GetTypes().Where(x => Attribute.IsDefined(x, typeof(ModEntryPoint)));
-                foreach (var type in types)
+                text.text += $"Loading mod {Path.GetFileNameWithoutExtension(filePath)}...\n";
+                var assembly = Assembly.LoadFrom(filePath);
+
+                foreach (var type in assembly.GetTypes()
+                    .Where(t => Attribute.IsDefined(t, typeof(ModEntryPointAttribute))))
                 {
-                    var method = type.GetMethod("Main");
-                    method.Invoke(null, null);
+                    type.GetMethod("Main")?.Invoke(null, null);
                 }
             }
         }

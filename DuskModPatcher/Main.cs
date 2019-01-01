@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
+﻿using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text;
+using System.Reflection;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 
@@ -13,63 +11,66 @@ namespace DuskMod
     {
         static void Main(string[] args)
         {
-            var log = new System.IO.StreamWriter("DuskModPatcher.log", false);
-            log.AutoFlush = true;
+            using (var file = File.OpenWrite("DuskModPatcher.log"))
+            using (var log  = new StreamWriter(file, Encoding.UTF8) { AutoFlush = true })
+            {
+                file.SetLength(0);
+                Patch(log);
+            }
+        }
 
-            string curdir           = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string duskdir          = Directory.GetParent(curdir).FullName;
-            string patchedAsm       = new[] { duskdir, "Dusk_Data", "Managed", "Assembly-CSharp.dll" }.Aggregate(Path.Combine);
-            string patchedAsmBackup = Path.Combine(curdir, "Assembly-CSharp.dll.bak");
-            string patchAsm         = Path.Combine(duskdir, "DuskMod.dll");
+        static void Patch(TextWriter log)
+        {
+            var curDir  = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
+            var duskDir = Directory.GetParent(curDir).FullName;
+            var asmPath = new[] { duskDir, "Dusk_Data", "Managed", "Assembly-CSharp.dll" }.Aggregate(Path.Combine);
+            var bakPath = Path.Combine(curDir, "Assembly-CSharp.dll.bak");
+            var injPath = Path.Combine(duskDir, "DuskMod.dll");
 
-            if (!File.Exists(patchedAsmBackup))
+            if (!File.Exists(bakPath))
             {
                 log.WriteLine("No backup found, creating backup...");
-                try
-                {
-                    File.Copy(patchedAsm, patchedAsmBackup);
-                }
-                catch (IOException err)
-                {
-                    log.WriteLine("Failed to create backup, {0}", err.Message);
-                }
+                File.Copy(asmPath, bakPath);
             }
             else
             {
                 log.WriteLine("Backup found, restoring...");
-                try
-                {
-                    File.Copy(patchedAsmBackup, patchedAsm, true);
-                }
-                catch (IOException err)
-                {
-                    log.WriteLine("Failed to restore backup, {0}", err.Message);
-                }
+                File.Copy(bakPath, asmPath, true);
             }
 
-            log.WriteLine("Trying to patch {0} with {1}", patchedAsm, patchAsm);
-            using (var hookedAsm = ModuleDefinition.ReadModule(patchedAsm, new ReaderParameters { ReadWrite = true }))
+            log.WriteLine("Trying to patch {0} with {1}", asmPath, injPath);
+            using (var asm = ModuleDefinition.ReadModule(asmPath, new ReaderParameters { ReadWrite = true }))
             {
-                if (hookedAsm.AssemblyReferences.SingleOrDefault(x => x.Name == "DuskMod") != null)
+                if (asm.AssemblyReferences.Any(r => r.Name == "DuskMod"))
                 {
-                    log.WriteLine("The assembly has already been patched, bailing out");
+                    log.WriteLine("The assembly has already been patched, bailing out...");
                     return;
                 }
 
-                using (var loaderAsm = ModuleDefinition.ReadModule(patchAsm))
+                using (var inj = ModuleDefinition.ReadModule(injPath))
                 {
-                    var hookMethod = loaderAsm.GetType("DuskMod").Methods.Single(x => x.Name == "Init");
-                    var dosLoadingScreen = hookedAsm.Types.First(x => x.Name == "DosLoadingScreen");
-                    var dosLoadTextField = dosLoadingScreen.Fields.First(x => x.Name == "textField");
-                    var dosLoadStart     = dosLoadingScreen.Methods.First(x => x.Name == "Start");
-                    var ilproc = dosLoadStart.Body.GetILProcessor();
-                    var loc = dosLoadStart.Body.Instructions[0];
+                    var hook   = inj.GetType("DuskMod").Methods.First(m => m.Name == "Init");
+                    var type   = inj.Types.First(t => t.Name == "DosLoadingScreen");
+                    var field  = type.Fields.First(f => f.Name == "textField");
+                    var method = type.Methods.First(m => m.Name == "Start");
+                    var il     = method.Body.GetILProcessor();
+                    var begin  = method.Body.Instructions.FirstOrDefault();
+                    
+                    foreach (var instruction in new[]
+                        {
+                            Instruction.Create(OpCodes.Ldarg_0),
+                            Instruction.Create(OpCodes.Ldfld, field),
+                            Instruction.Create(OpCodes.Call, asm.ImportReference(hook))
+                        })
+                    {
+                        if (begin != null)
+                            il.InsertBefore(begin, instruction);
+                        else
+                            il.Append(instruction);
+                    }
 
-                    ilproc.InsertBefore(loc, Instruction.Create(OpCodes.Ldarg_0));
-                    ilproc.InsertBefore(loc, Instruction.Create(OpCodes.Ldfld, dosLoadTextField));
-                    ilproc.InsertBefore(loc, Instruction.Create(OpCodes.Call, hookedAsm.ImportReference(hookMethod)));
-                    hookedAsm.Write();
-                    log.WriteLine("Done");
+                    asm.Write();
+                    log.WriteLine("Done.");
                 }
             }
         }
