@@ -50,7 +50,7 @@ namespace DuskMod
                 using (var inj = ModuleDefinition.ReadModule(injPath))
                 {
                     var hook   = inj.GetType("DuskMod").Methods.First(m => m.Name == "Init");
-                    var type   = inj.Types.First(t => t.Name == "DosLoadingScreen");
+                    var type   = asm.Types.First(t => t.Name == "DosLoadingScreen");
                     var field  = type.Fields.First(f => f.Name == "textField");
                     var method = type.Methods.First(m => m.Name == "Start");
                     var il     = method.Body.GetILProcessor();
