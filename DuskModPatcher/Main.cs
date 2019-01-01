@@ -4,6 +4,7 @@ using System.Text;
 using System.Reflection;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
+using System;
 
 namespace DuskMod
 {
@@ -15,7 +16,15 @@ namespace DuskMod
             using (var log  = new StreamWriter(file, Encoding.UTF8) { AutoFlush = true })
             {
                 file.SetLength(0);
-                Patch(log);
+                try
+                {
+                    Patch(log);
+                }
+                catch (Exception e)
+                {
+                    log.WriteLine(e.ToString());
+                    throw;
+                }
             }
         }
 
