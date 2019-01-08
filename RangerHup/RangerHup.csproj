@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <OutputType>Library</OutputType>
+        <TargetFramework>net40</TargetFramework>
+        <FrameworkPathOverride>$(DuskDir)\Dusk_Data\Managed</FrameworkPathOverride>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Reference Include="$(DuskDir)\Dusk_Data\Managed\*.dll" Private="False" />
+        <ProjectReference Include="..\DuskMod\DuskMod.csproj" Private="False" />
+        <PackageReference Include="Lib.Harmony" Version="1.2.0.1" />
+    </ItemGroup>
+</Project>
