@@ -135,6 +135,7 @@ public class Patch
         if (__instance.dojump)
         {
             velocity.y = pm_jumpvelocity;
+            ((AudioSource)__instance.JumpSound.GetComponent(typeof(AudioSource))).Play();
         }
         else
         {
@@ -298,7 +299,7 @@ public class Patch
             return true;
         }
     }
-
+#if false
     [HarmonyPatch(typeof(StatScript), "FixedUpdate")]
     class MyControllerScript_StatScript_Patch
     {
@@ -306,10 +307,12 @@ public class Patch
         {
             if (disbecontroller)
             {
+                /* Debug Output */
                 __instance.disbesecrets.text =
                     $"\n\n" +
                     $"wl: {waterlevel} \n";
             }
         }
     }
+#endif
 }
