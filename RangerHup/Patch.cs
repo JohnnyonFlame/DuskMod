@@ -33,6 +33,7 @@ public class Patch
     static ClimbingPowerupScript disbeclimbing = null;
     static LayerMask ladderlayers;
     static int waterlayer = 0;
+    static bool isSomewhatGrounded = false;
     static Vector3 velocity = Vector3.zero;
     static bool onLadders = false;
     static bool inwater_override = false;
@@ -69,7 +70,7 @@ public class Patch
         }
 
         /* Jumping State */
-        __instance.dojump = __instance.inputmanager.GetKeyInput("jump", (sv_autohop) ? 0 : 1);
+        __instance.dojump = isSomewhatGrounded && __instance.inputmanager.GetKeyInput("jump", (sv_autohop) ? 0 : 1);
 
         /* Crouch/Stand States */
         if (__instance.inputmanager.GetKeyInput("crouch", 1))
@@ -201,6 +202,8 @@ public class Patch
             /* Attempts to stop player from sliding downwards?? */
             __instance.rigidbox.enabled = __instance.CheckGrounded();
 
+            isSomewhatGrounded = (__instance.CheckGrounded() || __instance.SecondCheckGrounded());
+
             /* Crouching camera and character collider heights */
             float crouchStandSign = __instance.CrouchState ? -1 : 1;
             __instance.currentHeight += Time.deltaTime * __instance.crouchSpeed * crouchStandSign;
@@ -238,6 +241,7 @@ public class Patch
 
 
             GetInput(__instance, __instance.inwater || inwater_override);
+            __instance.SuperHot();
 
             /* Ladder physics code */
             onLadders = false; // Reset ladder status
@@ -253,7 +257,7 @@ public class Patch
                 DoSpidermanMovement(__instance);
             else if ((__instance.inwater || inwater_override) && !onLadders)
                 DoWaterMovement(__instance);
-            else if (!onLadders && (__instance.CheckGrounded() || __instance.SecondCheckGrounded()))
+            else if (!onLadders && isSomewhatGrounded)
                 DoGroundMovement(__instance);
             else
                 DoAirMovement(__instance);
