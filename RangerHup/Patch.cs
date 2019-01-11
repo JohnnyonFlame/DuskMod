@@ -70,7 +70,7 @@ public class Patch
         }
 
         /* Jumping State */
-        __instance.dojump = isSomewhatGrounded && __instance.inputmanager.GetKeyInput("jump", (sv_autohop) ? 0 : 1);
+        __instance.dojump = __instance.inputmanager.GetKeyInput("jump", (sv_autohop) ? 0 : 1);
 
         /* Crouch/Stand States */
         if (__instance.inputmanager.GetKeyInput("crouch", 1))
@@ -202,7 +202,7 @@ public class Patch
             /* Attempts to stop player from sliding downwards?? */
             __instance.rigidbox.enabled = __instance.CheckGrounded();
 
-            isSomewhatGrounded = (__instance.CheckGrounded() || __instance.SecondCheckGrounded());
+            isSomewhatGrounded = (__instance.CheckGrounded() || (__instance.SecondCheckGrounded() && velocity.y <= 0));
 
             /* Crouching camera and character collider heights */
             float crouchStandSign = __instance.CrouchState ? -1 : 1;
